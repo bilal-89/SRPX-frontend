@@ -12,11 +12,11 @@ const activityMapping = {
 
 };
 
-const getActivityColor = (activityType) => {
+export const getActivityColor = (activityType) => {
     return activityMapping[activityType]?.color || 'rgba(194, 178, 128, 0.6)';
 };
 
-const getActivityLabel = (activityType) => {
+export const getActivityLabel = (activityType) => {
     return activityMapping[activityType]?.label || activityType;
 };
 
@@ -51,7 +51,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                     nodes: {
                         shape: 'box',
                         font: {
-                            size: 20,
+                            size: 14,
                             color: '#ffffff',  // White text for better contrast
                             face: 'Courier, sans-serif',
                             bold: true
@@ -115,7 +115,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         level,
                         size: isActivity ? size : undefined,
                         font: {
-                            size: isActivity ? 36 : 20,
+                            size: isActivity ? 26 : 14,
                         },
                     });
                 };
