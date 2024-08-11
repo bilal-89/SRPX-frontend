@@ -11,17 +11,12 @@ const activityMapping = {
     'Nucleus':{ color: 'rgba(152,54,18,0.9)', label: 'NUC' }
 };
 
-export const getActivityColor = (activityType) => {
+const getActivityColor = (activityType) => {
     return activityMapping[activityType]?.color || 'rgba(194, 178, 128, 0.6)';
 };
 
-export const getActivityLabel = (activityType) => {
+const getActivityLabel = (activityType) => {
     return activityMapping[activityType]?.label || activityType;
-};
-
-const calculateNodeSize = (activitySize, minSize = 60, maxSize = 100) => {
-    const baseSize = Math.sqrt(activitySize) * 6;
-    return Math.min(Math.max(baseSize, minSize), maxSize);
 };
 
 const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
@@ -49,6 +44,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                 const options = {
                     nodes: {
                         shape: 'box',
+                        size: 30,  // Set a fixed size for all nodes
                         font: {
                             size: 14,
                             color: '#ffffff',
@@ -66,7 +62,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         shapeProperties: {
                             borderRadius: 6
                         },
-                        margin: 12,
+                        margin: 8,
                         color: {
                             background: activityColor,
                             border: activityColor,
@@ -85,8 +81,8 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         width: 2,
                         smooth: {
                             type: 'cubicBezier',
-                            forceDirection: 'vertical',
-                            roundness: 0.1
+                            forceDirection: 'horizontal',
+                            roundness: 0.2
                         },
                         arrows: {
                             to: {
@@ -96,33 +92,15 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                     },
                     layout: {
                         hierarchical: {
-                            direction: 'UD',
+                            direction: 'LR',
                             sortMethod: 'directed',
-                            nodeSpacing: 220,
-                            levelSeparation: 190
+                            nodeSpacing: 100,
+                            levelSeparation: 150
                         }
                     },
-                    physics: {
-                        enabled: true,
-                        hierarchicalRepulsion: {
-                            centralGravity: 0,
-                            springLength: 180,
-                            springConstant: 0.02,
-                            nodeDistance: 160,
-                            damping: 0.09
-                        },
-                        minVelocity: 0.4,
-                        solver: 'hierarchicalRepulsion',
-                        stabilization: {
-                            enabled: true,
-                            iterations: 100,
-                            updateInterval: 100,
-                            onlyDynamicEdges: false,
-                            fit: true
-                        },
-                    },
+                    physics: false,
                     interaction: {
-                        dragNodes: true,
+                        dragNodes: false,
                         dragView: false,
                         zoomView: false,
                         selectable: false,
@@ -130,15 +108,12 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                     }
                 };
 
-                const addNode = (id, label, level, size = null, isActivity = false) => {
+                const addNode = (id, label, level) => {
                     nodes.add({
                         id,
                         label,
                         level,
-                        size: isActivity ? size : undefined,
-                        font: {
-                            size: isActivity ? 26 : 19,
-                        },
+                        fixed: true
                     });
                 };
 
@@ -146,8 +121,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                     edges.add({ from, to });
                 };
 
-                const size = calculateNodeSize(currentData.ActivitySize);
-                addNode(currentData.ActivityType, getActivityLabel(currentData.ActivityType), 0, size, true);
+                addNode(currentData.ActivityType, getActivityLabel(currentData.ActivityType), 0);
 
                 const envNodes = new Map();
 
@@ -181,17 +155,26 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
 
                 const network = new Network(div, { nodes, edges }, options);
 
-                network.on("stabilizationIterationsDone", function () {
-                    network.setOptions({ physics: { enabled: false } });
+                // Pre-calculate positions
+                const containerWidth = div.clientWidth;
+                const containerHeight = div.clientHeight;
+                const levels = { 0: [], 1: [], 2: [] };
+
+                nodes.forEach(node => {
+                    levels[node.level].push(node);
                 });
 
-                network.on("dragStart", function (params) {
-                    network.setOptions({ physics: { enabled: true } });
+                Object.keys(levels).forEach(level => {
+                    const nodesInLevel = levels[level];
+                    const x = (containerWidth / 3) * level + containerWidth / 6;
+                    nodesInLevel.forEach((node, index) => {
+                        const y = (containerHeight / (nodesInLevel.length + 1)) * (index + 1);
+                        nodes.update({ id: node.id, x, y, fixed: { x: true, y: true } });
+                    });
                 });
 
-                network.on("dragEnd", function (params) {
-                    network.setOptions({ physics: { enabled: false } });
-                });
+                network.setData({ nodes, edges });
+                network.fit({ animation: false });
             };
 
             currentDayData.forEach(createOlogGraph);

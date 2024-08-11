@@ -7,14 +7,6 @@ import { format, parse } from 'date-fns';
 const backgroundColor = '#f0f0d8';
 const backgroundColor2 = 'rgb(240, 240, 216, 0.1)';
 
-const neumorphicStyle = {
-    borderRadius: '15px',
-    boxShadow: '5px 5px 10px #d1d1b7, -5px -5px 10px #fffff9',
-    padding: '10px',
-    transition: 'all 0.3s ease',
-    backgroundColor: backgroundColor
-};
-
 const neumorphicStyle2 = {
     borderRadius: '15px',
     boxShadow: '5px 5px 10px #d1d1b7, -5px -5px 10px #fffff9',
@@ -50,18 +42,6 @@ const neumorphicControlsStyle = {
     transform: 'translateX(32%)'
 };
 
-const flatButtonStyle = {
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    color: '#5a5a4f',
-    padding: '10px 20px',
-    margin: '0 5px',
-    transition: 'all 0.3s ease',
-    fontFamily: 'Maname, Arial, sans-serif'
-};
-
 const convertDateFormat = (dateString) => {
     if (!dateString) return ''; // Return an empty string if dateString is undefined or null
 
@@ -73,12 +53,12 @@ const convertDateFormat = (dateString) => {
 };
 
 const activityMapping = {
-    'Study Circle': { color: 'rgb(130, 168, 2, 0.6)', label: 'SC' },
-    'Devotional': { color: 'rgb(184, 2, 75, 0.6)', label: 'DEV' },
-    'Home Visit': { color: 'rgb(245, 45, 5, 0.6)', label: 'HV' },
-    "Children's Class": { color: 'rgb(270, 110, 2, 0.6)', label: 'CC' },
-    'JYG': { color: 'rgb(195, 122, 255, 0.5)', label: 'JYG' },
-    'Nucleus': { color: 'rgba(152,54,18,0.9)', label: 'NUC' }
+    'Study Circle': { color: 'rgb(130, 168, 2, 0.81)', label: 'SC' },
+    'Devotional': { color: 'rgb(184, 2, 75, 0.81)', label: 'DEV' },
+    'Home Visit': { color: 'rgb(245, 45, 5, 0.81)', label: 'HV' },
+    "Children's Class": { color: 'rgb(270, 110, 2, 0.81)', label: 'CC' },
+    'JYG': { color: 'rgb(195, 122, 255, 0.81)', label: 'JYG' },
+    'Nucleus': { color: 'rgba(152,54,18,0.81)', label: 'NUC' }
 };
 
 const getActivityColor = (activityType) => {
@@ -139,11 +119,8 @@ const AnimatedOlogVisualization = ({
     const updateVisualization = (activityData, network) => {
         if (!network) return;
 
-        const nodes = network.body.data.nodes;
-        const edges = network.body.data.edges;
-
-        nodes.clear();
-        edges.clear();
+        const nodes = new DataSet();
+        const edges = new DataSet();
 
         const calculateNodeSize = (activitySize, minSize = 60, maxSize = 100) => {
             const baseSize = Math.sqrt(activitySize) * 6;
@@ -172,9 +149,11 @@ const AnimatedOlogVisualization = ({
                 shadow: { enabled: true, color: 'rgba(0,0,0,0.2)', size: 5, x: 3, y: 3 },
                 size: isActivity ? size : undefined,
                 font: {
-                    size: isActivity ? 36 : 20,
-                    color: '#ffffff',  // White text for better contrast
-                },
+                    size: isActivity ? 19 : 14,
+                    color: '#ffffff',
+                    face: 'Maname',
+                    align: 'left'
+                }
             });
         };
 
@@ -183,11 +162,10 @@ const AnimatedOlogVisualization = ({
                 from,
                 to,
                 color: color,
-                connectionType: 'boundingBox',
                 smooth: {
                     type: 'cubicBezier',
-                    forceDirection: 'vertical',
-                    roundness: 0.1
+                    forceDirection: 'horizontal',
+                    roundness: 0.2
                 },
                 arrows: {
                     to: {
@@ -295,9 +273,37 @@ const AnimatedOlogVisualization = ({
             });
         }
 
-        network.fit();
-    };
+        // Pre-calculate positions
+        const containerWidth = network.canvas.frame.canvas.width;
+        const containerHeight = network.canvas.frame.canvas.height;
+        const levels = { 0: [], 1: [], 2: [] };
 
+        nodes.forEach(node => {
+            levels[node.level].push(node);
+        });
+
+        Object.keys(levels).forEach(level => {
+            const nodesInLevel = levels[level];
+            const levelWidth = containerWidth / 3;
+            const x = levelWidth * level + levelWidth / 2;
+            nodesInLevel.forEach((node, index) => {
+                const y = (containerHeight / (nodesInLevel.length + 1)) * (index + 1);
+                nodes.update({ id: node.id, x, y, fixed: { x: true, y: true } });
+            });
+        });
+
+        // Set the data with pre-calculated positions
+        network.setData({ nodes, edges });
+
+        // Disable physics and animations
+        network.setOptions({
+            physics: false,
+            layout: { improvedLayout: false },
+        });
+
+        // Immediately fit the network without animation
+        network.fit({ animation: false });
+    };
     const mixColors = (colors) => {
         if (colors.length === 1) return colors[0];
         const rgb = colors.reduce((acc, color) => {
@@ -305,7 +311,7 @@ const AnimatedOlogVisualization = ({
             return [acc[0] + r, acc[1] + g, acc[2] + b];
         }, [0, 0, 0]);
         const [r, g, b] = rgb.map(v => Math.round(v / colors.length));
-        return `rgb(${r}, ${g}, ${b}, 0.2)`;
+        return `rgb(${r}, ${g}, ${b}, 0.81)`;
     };
 
     useEffect(() => {
@@ -319,110 +325,74 @@ const AnimatedOlogVisualization = ({
 
                 const options = {
                     nodes: {
-                        margin: 26,
                         shape: 'box',
+                        margin: 12,
+                        widthConstraint: {
+                            maximum: '126px'
+                        },
                         font: {
-                            size: 26,
-                            color: '#faffee',
-                            face: 'Courier, sans-serif',
-                            bold: true
-                        },
-                        marginRight: '5px',
-                        marginLeft: '5px',
-                        borderWidth: 1.2,
-                        borderWidthSelected: 2,
-                        shadow: {
-                            enabled: true,
-                            color: 'rgba(0,0,0,0.1)',
-                            size: 5,
-                            x: 3,
-                            y: 3
-                        },
-                        shapeProperties: {
-                            borderRadius: 9
-                        },
-                        scaling: {
-                            min: 60,
-                            max: 90,
-                            label: {
-                                enabled: true,
-                                min: 14,
-                                max: 24,
-                                maxVisible: 24,
-                                drawThreshold: 5
-                            }
-                        },
-                        opacity: 1
+                            size: 12,
+                            face: 'Maname',
+                            align: 'left'
+                        }
                     },
                     edges: {
-                        width: 2,
                         smooth: {
-                            forceDirection: 'vertical',
-                            roundness: 0.6
-                        },
-                        length: 200,
-                        shadow: {
-                            enabled: true,
-                            color: 'rgba(0,0,0,0.05)',
-                            size: 3,
-                            x: 1,
-                            y: 1
-                        },
-                        connectionType: 'boundingBox'
+                            type: 'cubicBezier',
+                            forceDirection: 'horizontal',
+                            roundness: 0.2
+                        }
                     },
                     layout: {
                         hierarchical: {
-                            direction: 'UD',
+                            direction: 'LR',
                             sortMethod: 'directed',
-                            nodeSpacing: 300,  // Increased spacing
-                            levelSeparation: 360,  // Increased separation
-                            treeSpacing: 290,  // Increased spacing
-                        },
-                        improvedLayout: true,
+                            nodeSpacing: 50,
+                            levelSeparation: 150,
+                            treeSpacing: 50,
+                            blockShifting: true,
+                            edgeMinimization: true,
+                            parentCentralization: true
+                        }
                     },
-                    physics: {
-                        enabled: true,
-                        hierarchicalRepulsion: {
-                            centralGravity: 0.5,  // Reduced central gravity
-                            springLength: 350,  // Increased spring length
-                            springConstant: 0.02,
-                            nodeDistance: 333,  // Increased node distance
-                            damping: 0.9
-                        },
-                        minVelocity: 0.9,
-                        solver: 'hierarchicalRepulsion',
-                        stabilization: {
-                            enabled: true,
-                            iterations: 100,
-                            updateInterval: 100,
-                            onlyDynamicEdges: false,
-                            fit: true
-                        },
-                    },
+                    physics: false,
                     interaction: {
-                        selectable: false,
-                        selectConnectedEdges: false,
                         dragNodes: true,
                         dragView: false,
                         zoomView: false,
+                        selectable: false,
                         navigationButtons: false,
                         keyboard: {
                             enabled: false,
                         },
                     },
+                    autoResize: false,
+                    width: '100%',
+                    height: '100%',
                 };
 
                 const network = new Network(networkRefs.current[index], { nodes, edges }, options);
 
-                network.on("dragStart", function (params) {
-                    network.setOptions({ physics: { enabled: true } });
-                });
-
-                network.on("dragEnd", function (params) {
-                    network.setOptions({ physics: { enabled: true } });  // Keep physics enabled
-                });
+                const fitNetwork = () => {
+                    network.fit({
+                        animation: {
+                            duration: 0,
+                            easingFunction: 'linear'
+                        }
+                    });
+                };
 
                 updateVisualization(activity, network);
+
+                // Fit the network after a short delay to ensure all nodes are positioned
+                setTimeout(fitNetwork, 50);
+
+                // Fit the network again if the window is resized
+                window.addEventListener('resize', fitNetwork);
+
+                return () => {
+                    window.removeEventListener('resize', fitNetwork);
+                };
             }
         });
     }, [currentDateData, viewMode]);
@@ -529,27 +499,32 @@ const AnimatedOlogVisualization = ({
                 display: 'flex',
                 flexDirection: 'column',
                 height: '85%',
-                gap: '20px',
-                marginBottom: '20px',
+                gap: '10px',
+                marginBottom: '10px',
                 overflowY: 'auto'
             }}>
                 {(viewMode === 'SUM' ? [mergeActivities(currentDateData.activities)] : currentDateData.activities).map((activity, index) => (
                     <div key={index} style={{
                         display: 'flex',
-                        height: '300px',
-                        gap: '20px',
-                        marginBottom: '20px'
+                        height: '180px',
+                        gap: '10px',
+                        marginBottom: '10px'
                     }}>
                         <div style={{
-                            flex: .77,
+                            flex: 0.5,
                             overflowY: 'auto',
-                            height: '100%',
+                            height: '180px',
                             display: 'flex',
                             flexDirection: 'column',
                         }}>
-                            <h3 style={{color: '#5a5a4f', margin: '0 0 10px 0',
-                                fontFamily:'Maname', letterSpacing:'1px'}}>Activity Log</h3>
-                            <div style={{flex: 1, overflowY: 'auto',fontFamily:'Courier'}}>
+                            <h3 style={{
+                                color: '#5a5a4f',
+                                margin: '0 0 5px 0',
+                                fontFamily: 'Maname',
+                                letterSpacing: '1px',
+                                fontSize: '14px'
+                            }}>Activity Log</h3>
+                            <div style={{flex: 1, overflowY: 'auto', fontFamily: 'Courier', fontSize: '12px'}}>
                                 {viewMode === 'SUM' ? (
                                     <>
                                         <p>Activities: {activity.Activities.join(', ')}</p>
@@ -559,7 +534,7 @@ const AnimatedOlogVisualization = ({
                                     </>
                                 ) : (
                                     activity.Sequence.map((seq, seqIndex) => (
-                                        <p key={seqIndex} style={{color: '#5a5a4f'}}>
+                                        <p key={seqIndex} style={{color: '#5a5a4f', margin: '2px 0'}}>
                                             {seq.Action} - {seq.Material || seq.Topic || 'N/A'}
                                         </p>
                                     ))
@@ -567,8 +542,11 @@ const AnimatedOlogVisualization = ({
                             </div>
                         </div>
                         <div ref={el => networkRefs.current[index] = el} style={{
-                            flex: 2,
-                            height: '100%',
+                            flex: 1.5,
+                            height: '180px',
+                            border: '1px solid #d1d1b7',
+                            borderRadius: '15px',
+                            overflow: 'hidden'
                         }}></div>
                     </div>
                 ))}
