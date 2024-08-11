@@ -9,7 +9,6 @@ const activityMapping = {
     "Children's Class": { color: 'rgb(270, 110, 2, 0.81)', label: 'CC' },
     'JYG': { color: 'rgb(195, 122, 255, 0.81)', label: 'JYG' },
     'Nucleus':{ color: 'rgba(152,54,18,0.9)', label: 'NUC' }
-
 };
 
 export const getActivityColor = (activityType) => {
@@ -36,8 +35,8 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
 
             const createOlogGraph = (currentData, index) => {
                 const div = document.createElement('div');
-                div.style.width = '320px';
-                div.style.height = '240px';
+                div.style.width = '333px';
+                div.style.height = '230px';
                 div.style.display = 'inline-block';
                 div.style.margin = '10px';
                 container.appendChild(div);
@@ -52,7 +51,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         shape: 'box',
                         font: {
                             size: 14,
-                            color: '#ffffff',  // White text for better contrast
+                            color: '#ffffff',
                             face: 'Courier, sans-serif',
                             bold: true
                         },
@@ -65,9 +64,9 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                             y: 2
                         },
                         shapeProperties: {
-                            borderRadius: 8
+                            borderRadius: 6
                         },
-                        margin: 14,
+                        margin: 12,
                         color: {
                             background: activityColor,
                             border: activityColor,
@@ -87,18 +86,41 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         smooth: {
                             type: 'cubicBezier',
                             forceDirection: 'vertical',
-                            roundness: 0.3
+                            roundness: 0.1
+                        },
+                        arrows: {
+                            to: {
+                                enabled: false
+                            }
                         }
                     },
                     layout: {
                         hierarchical: {
                             direction: 'UD',
                             sortMethod: 'directed',
-                            nodeSpacing: 144,
-                            levelSeparation: 140
+                            nodeSpacing: 220,
+                            levelSeparation: 190
                         }
                     },
-                    physics: true,
+                    physics: {
+                        enabled: true,
+                        hierarchicalRepulsion: {
+                            centralGravity: 0,
+                            springLength: 180,
+                            springConstant: 0.02,
+                            nodeDistance: 160,
+                            damping: 0.09
+                        },
+                        minVelocity: 0.4,
+                        solver: 'hierarchicalRepulsion',
+                        stabilization: {
+                            enabled: true,
+                            iterations: 100,
+                            updateInterval: 100,
+                            onlyDynamicEdges: false,
+                            fit: true
+                        },
+                    },
                     interaction: {
                         dragNodes: true,
                         dragView: false,
@@ -115,7 +137,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         level,
                         size: isActivity ? size : undefined,
                         font: {
-                            size: isActivity ? 26 : 14,
+                            size: isActivity ? 26 : 19,
                         },
                     });
                 };
@@ -127,25 +149,49 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                 const size = calculateNodeSize(currentData.ActivitySize);
                 addNode(currentData.ActivityType, getActivityLabel(currentData.ActivityType), 0, size, true);
 
+                const envNodes = new Map();
+
                 currentData.Sequence.forEach((seq, index) => {
                     addNode(`${seq.Action}_${index}`, seq.Action, 1);
                     addEdge(currentData.ActivityType, `${seq.Action}_${index}`);
+
+                    // Add and connect environment nodes
+                    const envItem = seq.Material || seq.Topic;
+                    if (envItem) {
+                        if (!envNodes.has(envItem)) {
+                            const envNodeId = `env_${envNodes.size}`;
+                            addNode(envNodeId, envItem, 2);
+                            envNodes.set(envItem, envNodeId);
+                        }
+                        addEdge(`${seq.Action}_${index}`, envNodes.get(envItem));
+                    }
                 });
 
-                const environmentItems = [
-                    currentData.MaterialUsed,
-                    currentData.ServiceProjectType
-                ].filter(Boolean);
-
-                environmentItems.forEach((item, index) => {
-                    addNode(`env_${index}`, item, 2);
-                    addEdge(
-                        `${currentData.Sequence[currentData.Sequence.length - 1].Action}_${currentData.Sequence.length - 1}`,
-                        `env_${index}`
-                    );
+                // Add any remaining environment items
+                [currentData.MaterialUsed, currentData.ServiceProjectType].filter(Boolean).forEach(item => {
+                    if (!envNodes.has(item)) {
+                        const envNodeId = `env_${envNodes.size}`;
+                        addNode(envNodeId, item, 2);
+                        envNodes.set(item, envNodeId);
+                        // Connect to the last action node if there's no specific connection
+                        const lastActionNode = `${currentData.Sequence[currentData.Sequence.length - 1].Action}_${currentData.Sequence.length - 1}`;
+                        addEdge(lastActionNode, envNodeId);
+                    }
                 });
 
-                new Network(div, { nodes, edges }, options);
+                const network = new Network(div, { nodes, edges }, options);
+
+                network.on("stabilizationIterationsDone", function () {
+                    network.setOptions({ physics: { enabled: false } });
+                });
+
+                network.on("dragStart", function (params) {
+                    network.setOptions({ physics: { enabled: true } });
+                });
+
+                network.on("dragEnd", function (params) {
+                    network.setOptions({ physics: { enabled: false } });
+                });
             };
 
             currentDayData.forEach(createOlogGraph);

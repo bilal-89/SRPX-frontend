@@ -7,11 +7,11 @@ const SimplifiedClassicalView = ({ data }) => {
 
     // Define fixed activity types and their properties
     const fixedActivities = [
-        { type: 'Study Circle', color: 'rgb(130, 168, 2,0.6)', label: 'SC' },
         { type: 'Devotional', color: 'rgb(184, 2, 75,0.6)', label: 'DEV' },
         { type: 'Home Visit', color: 'rgb(245, 45, 5,0.6)', label: 'HV' },
         { type: "Children's Class", color: 'rgb(242, 110, 2,0.6)', label: "CC" },
         { type: 'JYG', color: 'rgb(109, 5, 245,0.5)', label: 'JYG' },
+        { type: 'Study Circle', color: 'rgb(130, 168, 2,0.6)', label: 'SC' },
         { type: 'Nucleus', color: 'rgba(152,54,18,0.9)', label: 'NUC' }
     ];
 

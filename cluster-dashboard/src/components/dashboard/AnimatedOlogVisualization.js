@@ -312,7 +312,7 @@ const AnimatedOlogVisualization = ({
                         shape: 'box',
                         font: {
                             size: 26,
-                            color: '#faffee',  // White text for better contrast
+                            color: '#faffee',
                             face: 'Courier, sans-serif',
                             bold: true
                         },
@@ -359,27 +359,26 @@ const AnimatedOlogVisualization = ({
                         },
                         connectionType: 'boundingBox'
                     },
-                    // ... (keep other options as they are)
                     layout: {
                         hierarchical: {
                             direction: 'UD',
                             sortMethod: 'directed',
-                            nodeSpacing: 260,  // Increase this value
-                            levelSeparation: 250,  // Increase this value
-                            treeSpacing: 250,  // Increase this value
+                            nodeSpacing: 300,  // Increased spacing
+                            levelSeparation: 260,  // Increased separation
+                            treeSpacing: 190,  // Increased spacing
                         },
                         improvedLayout: true,
                     },
                     physics: {
-                        enabled: false,
+                        enabled: true,
                         hierarchicalRepulsion: {
-                            centralGravity: 1.0,
-                            springLength: 300,
-                            springConstant: 0.01,
-                            nodeDistance: 250,
-                            damping: 0.09
+                            centralGravity: 0.5,  // Reduced central gravity
+                            springLength: 350,  // Increased spring length
+                            springConstant: 0.02,
+                            nodeDistance: 333,  // Increased node distance
+                            damping: 0.9
                         },
-                        minVelocity: 0.4,
+                        minVelocity: 0.9,
                         solver: 'hierarchicalRepulsion',
                         stabilization: {
                             enabled: true,
@@ -390,7 +389,7 @@ const AnimatedOlogVisualization = ({
                         },
                     },
                     interaction: {
-                        selectable: false,  // Disable node selection
+                        selectable: false,
                         selectConnectedEdges: false,
                         dragNodes: true,
                         dragView: false,
@@ -409,7 +408,7 @@ const AnimatedOlogVisualization = ({
                 });
 
                 network.on("dragEnd", function (params) {
-                    network.setOptions({ physics: { enabled: false } });
+                    network.setOptions({ physics: { enabled: true } });  // Keep physics enabled
                 });
 
                 updateVisualization(activity, network);
@@ -457,6 +456,54 @@ const AnimatedOlogVisualization = ({
 
     const handleClick = (newMode) => {
         setViewMode(newMode);
+    };
+
+    const renderActivityLog = (activity) => {
+        if (viewMode === 'SUM') {
+            return (
+                <>
+                    <h4>Activities:</h4>
+                    <ul>
+                        {activity.Activities.map((act, index) => (
+                            <li key={index}>{act} (Participants: {activity.ActivitySizes[index]})</li>
+                        ))}
+                    </ul>
+                    <h4>Actions:</h4>
+                    <ul>
+                        {activity.Actions.map((action, index) => (
+                            <li key={index}>{action}</li>
+                        ))}
+                    </ul>
+                    <h4>Environment:</h4>
+                    <ul>
+                        {activity.Environment.map((env, index) => (
+                            <li key={index}>{env}</li>
+                        ))}
+                    </ul>
+                    <p>Total Participants: {activity.TotalParticipants}</p>
+                </>
+            );
+        } else {
+            return (
+                <>
+                    <h4>Activity: {activity.ActivityType} (Participants: {activity.ActivitySize})</h4>
+                    <h4>Actions:</h4>
+                    <ul>
+                        {activity.Sequence.map((seq, seqIndex) => (
+                            <li key={seqIndex}>
+                                {seq.Action} {seq.Material ? `- Material: ${seq.Material}` : ''}
+                                {seq.Topic ? `- Topic: ${seq.Topic}` : ''}
+                            </li>
+                        ))}
+                    </ul>
+                    <h4>Environment:</h4>
+                    <ul>
+                        {activity.MaterialUsed && <li>Material Used: {activity.MaterialUsed}</li>}
+                        {activity.ServiceProjectType && <li>Service Project Type: {activity.ServiceProjectType}</li>}
+                    </ul>
+                </>
+            );
+        }
     };
 
     return (
