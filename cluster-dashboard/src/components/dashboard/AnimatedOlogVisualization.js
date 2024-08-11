@@ -165,7 +165,7 @@ const AnimatedOlogVisualization = ({
                 smooth: {
                     type: 'cubicBezier',
                     forceDirection: 'horizontal',
-                    roundness: 0.2
+                    roundness: 0.4
                 },
                 arrows: {
                     to: {
@@ -282,13 +282,26 @@ const AnimatedOlogVisualization = ({
             levels[node.level].push(node);
         });
 
+        const levelWidth = containerWidth / 3;
+        const nodePadding = 20; // Padding between nodes
+        const fixedNodeWidth = 120; // Fixed width for all nodes
+
+        // Position the nodes
         Object.keys(levels).forEach(level => {
             const nodesInLevel = levels[level];
-            const levelWidth = containerWidth / 3;
-            const x = levelWidth * level + levelWidth / 2;
+            const x = levelWidth * level + nodePadding; // Left-align nodes in each level
+            const availableHeight = containerHeight - (nodesInLevel.length - 1) * nodePadding;
+            const nodeHeight = availableHeight / nodesInLevel.length;
+
             nodesInLevel.forEach((node, index) => {
-                const y = (containerHeight / (nodesInLevel.length + 1)) * (index + 1);
-                nodes.update({ id: node.id, x, y, fixed: { x: true, y: true } });
+                const y = (nodeHeight + nodePadding) * index + nodeHeight / 2;
+                nodes.update({
+                    id: node.id,
+                    x: x,
+                    y: y,
+                    fixed: { x: true, y: true },
+                    widthConstraint: { minimum: fixedNodeWidth, maximum: fixedNodeWidth }
+                });
             });
         });
 
@@ -347,15 +360,15 @@ const AnimatedOlogVisualization = ({
                         hierarchical: {
                             direction: 'LR',
                             sortMethod: 'directed',
-                            nodeSpacing: 50,
-                            levelSeparation: 150,
+                            nodeSpacing: 72,
+                            levelSeparation: 190,
                             treeSpacing: 50,
                             blockShifting: true,
                             edgeMinimization: true,
                             parentCentralization: true
                         }
                     },
-                    physics: false,
+                    physics: true,
                     interaction: {
                         dragNodes: true,
                         dragView: false,
@@ -366,7 +379,7 @@ const AnimatedOlogVisualization = ({
                             enabled: false,
                         },
                     },
-                    autoResize: false,
+                    autoResize: true,
                     width: '100%',
                     height: '100%',
                 };

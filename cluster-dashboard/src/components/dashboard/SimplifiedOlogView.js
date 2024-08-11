@@ -82,7 +82,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                         smooth: {
                             type: 'cubicBezier',
                             forceDirection: 'horizontal',
-                            roundness: 0.2
+                            roundness: 0.4
                         },
                         arrows: {
                             to: {
