@@ -150,18 +150,7 @@ const AnimatedOlogVisualization = ({
             return Math.min(Math.max(baseSize, minSize), maxSize);
         };
 
-        const mixColors = (colors) => {
-            if (colors.length === 1) return colors[0];
-            const rgb = colors.reduce((acc, color) => {
-                const [r, g, b] = color.match(/\d+/g).map(Number);
-                return [acc[0] + r, acc[1] + g, acc[2] + b];
-            }, [0, 0, 0]);
-            const [r, g, b] = rgb.map(v => Math.round(v / colors.length));
-            return `rgb(${r}, ${g}, ${b}, 0.2)`;
-        };
-
-        const addNode = (id, label, level, colors, size = null, isActivity = false) => {
-            const mixedColor = mixColors(colors);
+        const addNode = (id, label, level, color, size = null, isActivity = false) => {
             nodes.add({
                 id,
                 label,
@@ -169,15 +158,15 @@ const AnimatedOlogVisualization = ({
                 level,
                 shape: 'box',
                 color: {
-                    background: mixedColor,
-                    border: mixedColor,
+                    background: color,
+                    border: color,
                     highlight: {
-                        background: mixedColor,
-                        border: mixedColor
+                        background: color,
+                        border: color
                     },
                     hover: {
-                        background: mixedColor,
-                        border: mixedColor
+                        background: color,
+                        border: color
                     }
                 },
                 shadow: { enabled: true, color: 'rgba(0,0,0,0.2)', size: 5, x: 3, y: 3 },
@@ -196,8 +185,9 @@ const AnimatedOlogVisualization = ({
                 color: color,
                 connectionType: 'boundingBox',
                 smooth: {
-                    type: 'straight',
-                    forceDirection: 'none'
+                    type: 'cubicBezier',
+                    forceDirection: 'vertical',
+                    roundness: 0.1
                 },
                 arrows: {
                     to: {
@@ -216,7 +206,7 @@ const AnimatedOlogVisualization = ({
             activityData.Activities.forEach((activity, index) => {
                 const color = activityColors[index];
                 const size = calculateNodeSize(activityData.ActivitySizes[index]);
-                addNode(`activity_${index}`, getActivityLabel(activity), 0, [color], size, true);
+                addNode(`activity_${index}`, getActivityLabel(activity), 0, color, size, true);
             });
 
             // Create a map of actions to their related activities
@@ -233,7 +223,8 @@ const AnimatedOlogVisualization = ({
             // Add action nodes
             Array.from(actionMap.entries()).forEach(([action, activityIndices], actionIndex) => {
                 const actionColors = Array.from(activityIndices).map(index => activityColors[index]);
-                addNode(`action_${actionIndex}`, action, 1, actionColors);
+                const mixedColor = mixColors(actionColors);
+                addNode(`action_${actionIndex}`, action, 1, mixedColor);
 
                 // Connect activities to actions
                 activityIndices.forEach(activityIndex => {
@@ -255,7 +246,8 @@ const AnimatedOlogVisualization = ({
             // Add environment nodes
             Array.from(envMap.entries()).forEach(([envItem, activityIndices], envIndex) => {
                 const envColors = Array.from(activityIndices).map(index => activityColors[index]);
-                addNode(`env_${envIndex}`, envItem, 2, envColors);
+                const mixedColor = mixColors(envColors);
+                addNode(`env_${envIndex}`, envItem, 2, mixedColor);
 
                 // Connect actions to environment
                 Array.from(actionMap.entries()).forEach(([action, actionActivityIndices], actionIndex) => {
@@ -266,36 +258,55 @@ const AnimatedOlogVisualization = ({
                     }
                 });
             });
-
         } else {
-            // SET VIEW (keep this part as it was in the previous version)
+            // SET VIEW
             const color = getActivityColor(activityData.ActivityType);
             const size = calculateNodeSize(activityData.ActivitySize);
-            addNode(activityData.ActivityType, getActivityLabel(activityData.ActivityType), 0, [color], size, true);
+            addNode(activityData.ActivityType, getActivityLabel(activityData.ActivityType), 0, color, size, true);
+
+            const envNodes = new Map();
 
             activityData.Sequence.forEach((seq, index) => {
-                addNode(`${seq.Action}_${index}`, seq.Action, 1, [color]);
+                addNode(`${seq.Action}_${index}`, seq.Action, 1, color);
                 addEdge(activityData.ActivityType, `${seq.Action}_${index}`, color);
+
+                // Add and connect environment nodes
+                const envItem = seq.Material || seq.Topic;
+                if (envItem) {
+                    if (!envNodes.has(envItem)) {
+                        const envNodeId = `env_${envNodes.size}`;
+                        addNode(envNodeId, envItem, 2, color);
+                        envNodes.set(envItem, envNodeId);
+                    }
+                    addEdge(`${seq.Action}_${index}`, envNodes.get(envItem), color);
+                }
             });
 
-            const environmentItems = [
-                activityData.MaterialUsed,
-                activityData.ServiceProjectType,
-            ].filter(Boolean);
-
-            environmentItems.forEach((item, index) => {
-                addNode(`env_${index}`, item, 2, [color]);
-                addEdge(
-                    `${activityData.Sequence[activityData.Sequence.length - 1].Action}_${activityData.Sequence.length - 1}`,
-                    `env_${index}`,
-                    color
-                );
+            // Add any remaining environment items
+            [activityData.MaterialUsed, activityData.ServiceProjectType].filter(Boolean).forEach(item => {
+                if (!envNodes.has(item)) {
+                    const envNodeId = `env_${envNodes.size}`;
+                    addNode(envNodeId, item, 2, color);
+                    envNodes.set(item, envNodeId);
+                    // Connect to the last action node if there's no specific connection
+                    const lastActionNode = `${activityData.Sequence[activityData.Sequence.length - 1].Action}_${activityData.Sequence.length - 1}`;
+                    addEdge(lastActionNode, envNodeId, color);
+                }
             });
         }
 
         network.fit();
     };
 
+    const mixColors = (colors) => {
+        if (colors.length === 1) return colors[0];
+        const rgb = colors.reduce((acc, color) => {
+            const [r, g, b] = color.match(/\d+/g).map(Number);
+            return [acc[0] + r, acc[1] + g, acc[2] + b];
+        }, [0, 0, 0]);
+        const [r, g, b] = rgb.map(v => Math.round(v / colors.length));
+        return `rgb(${r}, ${g}, ${b}, 0.2)`;
+    };
 
     useEffect(() => {
         const activities = currentDateData.activities;
@@ -331,7 +342,7 @@ const AnimatedOlogVisualization = ({
                             borderRadius: 9
                         },
                         scaling: {
-                            min: 50,
+                            min: 60,
                             max: 90,
                             label: {
                                 enabled: true,
@@ -364,8 +375,8 @@ const AnimatedOlogVisualization = ({
                             direction: 'UD',
                             sortMethod: 'directed',
                             nodeSpacing: 300,  // Increased spacing
-                            levelSeparation: 260,  // Increased separation
-                            treeSpacing: 190,  // Increased spacing
+                            levelSeparation: 360,  // Increased separation
+                            treeSpacing: 290,  // Increased spacing
                         },
                         improvedLayout: true,
                     },

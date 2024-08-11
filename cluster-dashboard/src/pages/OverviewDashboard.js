@@ -110,7 +110,7 @@ const OverviewDashboard = () => {
                     fontSize: '1.8em',
                     flexShrink: 0,
                 }}>
-                    Analytics Dashboard
+                    SRP Extension
                 </h1>
                 <div style={{
                     flex: .7, maxWidth: '990px', maxHeight: '190px', marginLeft: '0px',
