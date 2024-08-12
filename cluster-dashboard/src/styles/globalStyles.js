@@ -87,6 +87,9 @@ export const neumorphicControlsStyle3 = {
     border: '4px solid',
     borderColor: 'rgba(152,54,18,0.4)',
     borderWidth: '5px',
+    // fontFamily:'Kiwi Maru',
+    // fontFamily:'Maname'
+    fontFamily:'Averia Serif Libre'
 };
 
 

@@ -39,7 +39,7 @@ const SimplifiedClassicalView = ({ data }) => {
             setAnimationProgress(prev => {
                 if (prev < 1) {
                     animationFrame = requestAnimationFrame(animate);
-                    return prev + 0.05; // Adjust this value to change animation speed
+                    return prev + 0.01; // Adjust this value to change animation speed
                 }
                 return 1;
             });

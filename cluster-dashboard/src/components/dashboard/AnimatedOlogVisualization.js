@@ -3,6 +3,7 @@ import { Network } from 'vis-network/standalone';
 import { DataSet } from 'vis-data/standalone';
 import { FaFastBackward, FaBackward, FaPlay, FaPause, FaForward, FaFastForward } from 'react-icons/fa';
 import { format, parse } from 'date-fns';
+import CurrentDateDisplay from "../common/CurrentDateDisplay";
 
 const backgroundColor = '#f0f0d8';
 const backgroundColor2 = 'rgb(240, 240, 216, 0.1)';
@@ -121,6 +122,7 @@ const AnimatedOlogVisualization = ({
 
         const nodes = new DataSet();
         const edges = new DataSet();
+
 
         const calculateNodeSize = (activitySize, minSize = 60, maxSize = 100) => {
             const baseSize = Math.sqrt(activitySize) * 6;
@@ -317,6 +319,7 @@ const AnimatedOlogVisualization = ({
         // Immediately fit the network without animation
         network.fit({ animation: false });
     };
+
     const mixColors = (colors) => {
         if (colors.length === 1) return colors[0];
         const rgb = colors.reduce((acc, color) => {
@@ -365,7 +368,7 @@ const AnimatedOlogVisualization = ({
                             treeSpacing: 50,
                             blockShifting: true,
                             edgeMinimization: true,
-                            parentCentralization: true
+                            parentCentralization: false
                         }
                     },
                     physics: true,
@@ -514,12 +517,13 @@ const AnimatedOlogVisualization = ({
                 height: '85%',
                 gap: '10px',
                 marginBottom: '10px',
-                overflowY: 'auto'
+                overflowY: 'auto',
+                overflowX: 'auto'  // Add horizontal scroll
             }}>
                 {(viewMode === 'SUM' ? [mergeActivities(currentDateData.activities)] : currentDateData.activities).map((activity, index) => (
                     <div key={index} style={{
                         display: 'flex',
-                        height: '180px',
+                        minHeight: '180px',  // Change height to minHeight
                         gap: '10px',
                         marginBottom: '10px'
                     }}>
@@ -537,7 +541,7 @@ const AnimatedOlogVisualization = ({
                                 letterSpacing: '1px',
                                 fontSize: '14px'
                             }}>Activity Log</h3>
-                            <div style={{flex: 1, overflowY: 'auto', fontFamily: 'Courier', fontSize: '12px'}}>
+                            <div style={{flex: 1, overflowY: 'auto', fontFamily: 'Courier', fontSize: '14px'}}>
                                 {viewMode === 'SUM' ? (
                                     <>
                                         <p>Activities: {activity.Activities.join(', ')}</p>
@@ -557,7 +561,7 @@ const AnimatedOlogVisualization = ({
                         <div ref={el => networkRefs.current[index] = el} style={{
                             flex: 1.5,
                             height: '180px',
-                            border: '1px solid #d1d1b7',
+                            border: "none",
                             borderRadius: '15px',
                             overflow: 'hidden'
                         }}></div>
@@ -566,7 +570,7 @@ const AnimatedOlogVisualization = ({
             </div>
 
             <div style={{
-                fontSize: '1.4em',
+                fontSize: '1.0em',
                 fontWeight: 'bold',
                 color: '#5a5a4f',
                 textAlign: 'center',
@@ -574,7 +578,7 @@ const AnimatedOlogVisualization = ({
                 marginBottom: '5px',
                 transform: 'translateX(14%)'
             }}>
-                {currentDateData.date ? convertDateFormat(currentDateData.date) : ''}
+                <CurrentDateDisplay />
             </div>
 
             <div style={{

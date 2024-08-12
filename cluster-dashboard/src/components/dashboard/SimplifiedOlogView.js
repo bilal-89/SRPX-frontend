@@ -34,6 +34,8 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                 div.style.height = '230px';
                 div.style.display = 'inline-block';
                 div.style.margin = '10px';
+                div.style.marginBottom = '9px'; // Adjust this value to increase/decrease vertical separation
+
                 container.appendChild(div);
 
                 const nodes = new DataSet();
@@ -95,7 +97,7 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
                             direction: 'LR',
                             sortMethod: 'directed',
                             nodeSpacing: 100,
-                            levelSeparation: 150
+                            levelSeparation: 149
                         }
                     },
                     physics: false,
@@ -182,8 +184,12 @@ const SimplifiedOlogView = ({ groupedData, currentDataIndex }) => {
     }, [groupedData, currentDataIndex]);
 
     return (
-        <div ref={containerRef} style={{ height: '100%', width: '100%', overflowY: 'auto', padding: '5px' }}></div>
-    );
+        <div ref={containerRef} style={{
+            height: '90%',
+            width: '100%',
+            overflowY: 'auto',
+            paddingBottom: '30px' // Adjust this value as needed
+        }}></div>    );
 };
 
 export default SimplifiedOlogView;

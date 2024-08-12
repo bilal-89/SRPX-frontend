@@ -8,6 +8,8 @@ import AnalysesPanel from './AnalysesPanel';
 import PlaybackControls from '../components/common/PlaybackControls';
 import { neumorphicStyle, neumorphicButtonStyle, neumorphicControlsStyle } from '../styles/globalStyles';
 import { useQuery } from '../context/QueryContext';
+import CurrentDateDisplay from '../components/common/CurrentDateDisplay'; // Import the CurrentDateDisplay component
+
 
 const MemoizedNetworkView = React.memo(NetworkView);
 
@@ -65,7 +67,7 @@ const NetPage = () => {
                     const nextIndex = (currentIndex + 1) % groupedData.length;
                     return groupedData[nextIndex].date;
                 });
-            }, 1000); // Change this value to adjust the playback speed
+            }, 1440); // Change this value to adjust the playback speed
         }
         return () => {
             if (interval) clearInterval(interval);
@@ -237,7 +239,11 @@ const NetPage = () => {
                 <button onClick={() => navigate('/')} style={neumorphicButtonStyle}>
                     Back to Overview
                 </button>
-                <h2 style={{color: '#333', margin: '0'}}>Network View</h2>
+                <h2 style={{color: '#333', margin: '0',
+                    // fontFamily:'Kiwi Maru',
+                    // fontFamily:'Maname'
+                    fontFamily:'Averia Serif Libre'
+                }}>Network View</h2>
                 <div style={{width: '150px'}}></div>
             </div>
             <QueryInputs
@@ -284,8 +290,9 @@ const NetPage = () => {
                         color: '#5a5a4f',
                         marginBottom: '10px'
                     }}>
-                        {currentTimestep || 'N/A'}
                     </div>
+                    <CurrentDateDisplay />
+
                     <div style={{
                         display: 'flex',
                         justifyContent: 'center',

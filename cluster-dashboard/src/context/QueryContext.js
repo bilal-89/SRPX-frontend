@@ -1,5 +1,3 @@
-// src/context/QueryContext.js
-
 import React, { createContext, useState, useContext, useCallback } from 'react';
 
 const QueryContext = createContext();
@@ -15,9 +13,11 @@ export const QueryProvider = ({ children }) => {
     const [inputParams, setInputParams] = useState(queryParams);
     const [currentTimestep, setCurrentTimestep] = useState(queryParams.start_date);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [hasInitialQuery, setHasInitialQuery] = useState(false);
 
     const updateQueryParams = useCallback((newParams) => {
         setQueryParams(prevParams => ({ ...prevParams, ...newParams }));
+        setHasInitialQuery(true);
         // Reset currentTimestep when query changes
         setCurrentTimestep(newParams.start_date || prevParams.start_date);
     }, []);
@@ -43,7 +43,8 @@ export const QueryProvider = ({ children }) => {
             currentTimestep,
             updateCurrentTimestep,
             isPlaying,
-            togglePlayback
+            togglePlayback,
+            hasInitialQuery
         }}>
             {children}
         </QueryContext.Provider>
