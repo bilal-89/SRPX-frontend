@@ -137,7 +137,7 @@ const OverviewDashboard = () => {
                                 currentDataIndex={currentDataIndex}
                             />
                         ) : (
-                            <div>Please make a query.</div>
+                            <div>Please make a query</div>
                         )}
                     </div>
                 </ViewButton>
@@ -157,7 +157,7 @@ const OverviewDashboard = () => {
                                 activityMapping={activityMapping}
                             />
                         ) : (
-                            <div>Please make a query.</div>
+                            <div>Please make a query</div>
                         )}
                     </div>
                 </ViewButton>
@@ -172,7 +172,7 @@ const OverviewDashboard = () => {
                         {hasInitialQuery ? (
                             <SimplifiedOlogView groupedData={groupedData} currentDataIndex={currentDataIndex}/>
                         ) : (
-                            <div>Please make a query.</div>
+                            <div>Please make a query</div>
                         )}
                     </div>
                 </ViewButton>
@@ -187,7 +187,7 @@ const OverviewDashboard = () => {
                         {hasInitialQuery ? (
                             <SimplifiedClassicalView data={currentData}/>
                         ) : (
-                            <div>Please make a query.</div>
+                            <div>Please make a query</div>
                         )}
                     </div>
                 </ViewButton>

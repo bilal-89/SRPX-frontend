@@ -83,7 +83,8 @@ const StructuralViewPage = () => {
                 </div>
                 <div style={{...neumorphicControlsStyle, flex: 1, maxWidth:'360px', padding: '20px', maxHeight: '540px', overflowY: 'auto',border:'2px solid rgb(160, 82, 45, .1)'}}>
                     <h3 style={{color: '#5a5a4f',textAlign:'right', marginTop: '0'}}>Analyses Panel</h3>
-                    {/* Add your analyses panel content here */}
+                    {/*<h4>Complexity Measures</h4>*/}
+                    {/*<p style={{color: '#5a5a4f',marginTop: '90px'}}>Cyclomatic Complexity</p>*/}
                 </div>
             </div>
         </div>
